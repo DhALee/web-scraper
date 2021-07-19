@@ -1,6 +1,7 @@
-# Installed library -> resquests, beautifulsoup4
+# Install library -> resquests, beautifulsoup4
 import requests
 from bs4 import BeautifulSoup
+import sys
 
 RADIUS = 100
 LIMIT = 50
@@ -17,7 +18,7 @@ def extract_indeed_pages():
     links = pagination.find_all("a")
     # print(links)
     pages = []
-    for link in links[:-1]: # to elimiante last element
+    for link in links[:-1]: # To elimiante last element
         pages.append(int(link.find("span").string))
     # print(pages)
     max_page = pages[-1]
@@ -25,30 +26,38 @@ def extract_indeed_pages():
 
 def extract_indeed_jobs(last_page):
     jobs = []
+    
+    # Read all the pages
+    for page in range(last_page):
+        each_page = requests.get(f"{URL}&start={page * LIMIT}")
+        # print(each_page.status_code)
+        soup = BeautifulSoup(each_page.text, "html.parser")
+        results = soup.find_all("div", {"class": "job_seen_beacon"})
 
-    # for page in range(last_page):
-    #     each_page = requests.get(f"{URL}&start={page * LIMIT}")
-    #     # print(each_page.status_code)
-    #     soup = BeautifulSoup(each_page.text, "html.parser")
-    #     results = soup.find_all("div", {"class": "job_seen_beacon"})
-    #     print(results)
 
+        each_page = requests.get(f"{URL}&start={0 * LIMIT}")
+        soup = BeautifulSoup(each_page.text, "html.parser")
+        results = soup.find_all("div", {"class": "job_seen_beacon"}) # job cards
+        # print(len(results)) # 50 job cards in a page
+        for result in results:
+            spans = result.find_all("span")
+            for span in spans:
+                # company = span.find("span", {"class": "companyName"}) # None
+                # span.find("span")['class'] # None
+                if span.get("class") == ['companyName']:
+                    company = span.string
+                if span.get("title") is not None:
+                    title = span.get("title")
+            print(title, company)
+                
+
+    # Only bring title
     # each_page = requests.get(f"{URL}&start={0 * LIMIT}")
     # soup = BeautifulSoup(each_page.text, "html.parser")
-    # results = soup.find_all("div", {"class": "job_seen_beacon"})
+    # results = soup.find_all("h2", {"class": "jobTitle jobTitle-color-purple"})
     # for result in results:
-    #     spans = result.find("span")["title"]
-    #     # print(spans.find("title"))
-    #     print(spans)
+    #     title = result.find("span")["title"]
+    #     print(title)
     # # print(results)
-
-    each_page = requests.get(f"{URL}&start={0 * LIMIT}")
-    soup = BeautifulSoup(each_page.text, "html.parser")
-    results = soup.find_all("h2", {"class": "jobTitle jobTitle-color-purple"})
-    for result in results:
-        spans = result.find("span")["title"]
-        # print(spans.find("title"))
-        print(spans)
-    # print(results)
 
     return jobs
