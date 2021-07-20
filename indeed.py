@@ -1,4 +1,3 @@
-# Install library -> resquests, beautifulsoup4
 import requests
 from bs4 import BeautifulSoup
 
@@ -7,7 +6,7 @@ LIMIT = 50
 URL = f"https://kr.indeed.com/%EC%B7%A8%EC%97%85?as_and=Python&as_phr=&as_any=&as_not=&as_ttl=&as_cmp=&jt=all&st=&salary=&radius={RADIUS}&l=%EA%B2%BD%EA%B8%B0%EB%8F%84+%EC%95%88%EC%96%91&fromage=any&limit={LIMIT}&sort=&psf=advsrch&from=advancedsearch"
 
 
-def extract_indeed_pages():
+def get_last_page():
     url = requests.get(URL)
     # print(url) # 200 means okay
     soup = BeautifulSoup(url.text, "html.parser")
@@ -37,7 +36,7 @@ def extract_job(html):
     }
 
 
-def extract_indeed_jobs(last_page):
+def extract_jobs(last_page):
     jobs = []
     for page in range(last_page):
         # print(f"Scrapping page {page}")
@@ -50,4 +49,10 @@ def extract_indeed_jobs(last_page):
         for job_card in job_cards:
             job = extract_job(job_card)
             jobs.append(job)
+    return jobs
+
+
+def get_jobs():
+    last_page = get_last_page()
+    jobs = extract_jobs(last_page)
     return jobs
