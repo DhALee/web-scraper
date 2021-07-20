@@ -39,7 +39,7 @@ def extract_job(html):
 def extract_jobs(last_page):
     jobs = []
     for page in range(last_page):
-        # print(f"Scrapping page {page}")
+        # print(f"Scrapping indeed page: {page}")
         each_page = requests.get(f"{URL}&start={page * LIMIT}")
         soup = BeautifulSoup(each_page.text, "html.parser")
         job_cards_zone = soup.find("div", {"id": "mosaic-zone-jobcards"})
