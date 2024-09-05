@@ -1,4 +1,5 @@
 import os
+import re
 import sys
 import time
 import random
@@ -13,6 +14,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
+
 user_agents = [
         'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36',
         'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36',
@@ -25,17 +27,6 @@ user_agents = [
 
 os.environ['USER_AGENT'] = random.choice(user_agents)
 print(os.environ['USER_AGENT'])
-
-def html_links():
-    url = 'https://www.lottecard.co.kr/app/LPBNFDA_V100.lc'  # 원하는 URL로 변경하세요
-    response = requests.get(url)
-    soup = BeautifulSoup(response.text, 'html.parser')
-
-    links = []
-    for link in soup.find_all('a', href=True):
-        links.append(link['href'])
-
-    print(links)
 
 def check_links_change(driver, initial_links_count):
     current_links_count = len(driver.find_elements(By.TAG_NAME, 'a'))
@@ -74,7 +65,7 @@ def hc_event(url):
                 # print(links)
                 print("페이지 로드 중입니다.")
                 driver.execute_script("pageing();")
-                WebDriverWait(driver, 5).until(lambda driver: check_links_change(driver, initial_links_count))
+                WebDriverWait(driver, 3).until(lambda driver: check_links_change(driver, initial_links_count))
 
                 page_source = driver.page_source
                 soup = BeautifulSoup(page_source, 'html.parser')
@@ -102,29 +93,73 @@ def hc_event(url):
     event_links = []
     for filtered_link in filtered_links:
         event_links.append(hc + filtered_link)
-    print(event_links)
+    # print(event_links)
+    
+    for event_link in event_links:
+        driver.get(event_link)
+        print(event_link)
+        name = event_link.split('=')[1].split('&')[0]
+        time.sleep(3)
+        page_source = driver.page_source
+        soup = BeautifulSoup(page_source, 'html.parser')
+        page_text = soup.get_text()
+
+        # with open(f'/svc/project/genaipilot/web-scraper/html_files/{name}.html', 'w', encoding='utf-8') as file:
+        #     print(f"{name}.html 저장 중")
+        #     file.write(page_source)
+
+        with open(f'/svc/project/genaipilot/web-scraper/test_files/{name}.txt', 'w', encoding='utf-8') as file:
+            print(f"{name}.txt 저장 중")
+
+            pattern = re.compile(r"(이벤트\n\n\n\n.*?심의필)", re.DOTALL)
+            matches = pattern.findall(page_text)
+            if matches:
+                for match in matches:
+                    print(match)
+                    file.write(match)
+            else:
+                print("No match found.")
+
+            # pattern = re.compile(r"이벤트\n\n\n\n(.*?)심의필", re.DOTALL)
+            # match = pattern.search(page_text)
+            # if match:
+            #     result = match.group(1).strip()
+            #     print(result)
+            #     file.write(result)
+            # else:
+            #     print("No match found.")
+
 
     driver.quit()
 
-    return event_links
+def read_text(url):
+    chrome_options = Options()
+    chrome_options.add_argument('--no-sandbox')  # 샌드박스 비활성화
+    chrome_options.add_argument('--disable-dev-shm-usage')  # /dev/shm 사용 비활성화
+    chrome_options.add_argument('--remote-debugging-port=9222')  # 원격 디버깅 포트 설정
+    chrome_options.add_argument('--headless')  # GUI 없이 실행 (헤드리스 모드)
+    chrome_options.add_argument('--disable-gpu')  # GPU 비활성화 (일부 환경에서 필요)
+    chrome_options.add_argument('--disable-software-rasterizer')  # 소프트웨어 래스터라이저 비활성화
+    service = Service('/usr/bin/chromedriver')
+    driver = webdriver.Chrome(service=service, options=chrome_options)
 
-def site():
+    # 웹페이지 열기
+    url = url
+    driver.get(url)
 
-    loader = SitemapLoader(
-        web_path="https://api.python.langchain.com/sitemap.xml"
-    )
-    data = loader.load()
-    print(data)
+    # 페이지 HTML 소스 가져오기
+    page_source = driver.page_source
+    soup = BeautifulSoup(page_source, 'html.parser')
+    page_text = soup.get_text()
 
-def web(link):
-    loader = WebBaseLoader(
-        web_path=f"{link}"
-    )
-    documents = loader.load()
-    print(documents)
+    with open(f'/svc/project/genaipilot/web-scraper/test.txt', 'w', encoding='utf-8') as file:
+        file.write(page_text)
+
+    # 브라우저 닫기
+    driver.quit()
+
 
 if __name__ == "__main__":
-    url = 'https://www.hyundaicard.com/cpb/ev/CPBEV0101_01.hc'
-    event_links = hc_event(url)
-    for event_link in event_links:
-        web(event_link)
+    # url = 'https://www.hyundaicard.com/cpb/ev/CPBEV0101_01.hc'
+    # hc_event(url)
+   read_text('https://www.hyundaicard.com/cpb/ev/CPBEV0101_06.hc?bnftWebEvntCd=208551&searchWord=')
