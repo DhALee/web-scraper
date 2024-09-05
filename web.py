@@ -217,13 +217,33 @@ def cg_event(url):
         print(event_link)
         name = event_link.split('/')[-1]
         time.sleep(3)
+        
+        items = driver.find_elements(By.CSS_SELECTOR, 'dl[data-v-225eb1a5]')
+        for item in items:
+            try:
+                item.click()
+                WebDriverWait(driver, 5).until(EC.attribute_to_be((By.CSS_SELECTOR, 'dl[data-v-225eb1a5]'), 'class', 'on'))
+            except Exception as e:
+                continue
+
         page_source = driver.page_source
         soup = BeautifulSoup(page_source, 'html.parser')
-        page_text = soup.get_text()
+        # page_text = soup.get_text()
 
         with open(f'/svc/project/genaipilot/web-scraper/cg_files/{name}.txt', 'w', encoding='utf-8') as file:
             print(f"{name}.txt 저장 중")
-            file.write(page_text)
+            page_text = soup.get_text(separator='\n', strip=True)
+            page_text = re.sub(r'\n+', '\n', page_text)
+            page_text = re.sub(r'[ \t]+', ' ', page_text)
+
+            pattern = re.compile(r"비교함 담기\n(.*?)꼭 확인하세요!", re.DOTALL)
+            matches = pattern.findall(page_text)
+            if matches:
+                for match in matches:
+                    print(match)
+                    file.write(match)
+            else:
+                print("No match found.")
 
     driver.quit()
 
