@@ -49,7 +49,7 @@ def hc_event(url):
     driver.get(url)
 
     # 자바스크립트가 실행되도록 잠시 대기
-    time.sleep(5)  # 필요 시 적절한 시간으로 조정 가능
+    time.sleep(3)  # 필요 시 적절한 시간으로 조정 가능
 
     page_source = driver.page_source
     soup = BeautifulSoup(page_source, 'html.parser')
@@ -173,7 +173,7 @@ def cg_event(url):
     driver.get(url)
 
     # 자바스크립트가 실행되도록 잠시 대기
-    time.sleep(5)  # 필요 시 적절한 시간으로 조정 가능
+    time.sleep(3)  # 필요 시 적절한 시간으로 조정 가능
 
     page_source = driver.page_source
     soup = BeautifulSoup(page_source, 'html.parser')
@@ -196,7 +196,7 @@ def cg_event(url):
             WebDriverWait(driver, 5).until(EC.invisibility_of_element_located((By.ID, 'modal')))
         
         except Exception as e:
-            # print(f"Failed to process popup {idx}: {e}")
+            print(f"Failed to process popup {idx}: {e}")
             continue
 
     links = []
@@ -208,6 +208,7 @@ def cg_event(url):
     # print(card_links)
     # print(len(card_links))
     cg = 'https://www.card-gorilla.com'
+
     event_links = []
     for card_link in card_links:
         event_links.append(cg + card_link)
@@ -217,6 +218,24 @@ def cg_event(url):
         print(event_link)
         name = event_link.split('/')[-1]
         time.sleep(3)
+
+        # page_source = driver.page_source
+        # soup = BeautifulSoup(page_source, 'html.parser')
+        
+        # modal = driver.find_element(By.CSS_SELECTOR, '.event_txt')
+
+        # modal.click()
+        # WebDriverWait(driver, 5).until(EC.visibility_of_element_located((By.ID, 'modal')))
+        # modal_content = driver.find_element(By.ID, 'modal').text
+        # # print(modal_content)
+
+        # if modal_content.strip():
+        #     with open(f'/svc/project/genaipilot/web-scraper/cg_files/{name}.txt', 'w', encoding='utf-8') as file:
+        #         print(f"{name}.txt 저장 중")
+        #         file.write(modal_content)
+
+        # webdriver.ActionChains(driver).send_keys(Keys.ESCAPE).perform()
+        # WebDriverWait(driver, 5).until(EC.invisibility_of_element_located((By.ID, 'modal')))
         
         items = driver.find_elements(By.CSS_SELECTOR, 'dl[data-v-225eb1a5]')
         for item in items:
@@ -231,19 +250,21 @@ def cg_event(url):
         # page_text = soup.get_text()
 
         with open(f'/svc/project/genaipilot/web-scraper/cg_files/{name}.txt', 'w', encoding='utf-8') as file:
-            print(f"{name}.txt 저장 중")
             page_text = soup.get_text(separator='\n', strip=True)
             page_text = re.sub(r'\n+', '\n', page_text)
             page_text = re.sub(r'[ \t]+', ' ', page_text)
 
-            pattern = re.compile(r"비교함 담기\n(.*?)꼭 확인하세요!", re.DOTALL)
+            pattern = re.compile(r"비교함 담기\n(.*?심의필)", re.DOTALL)
             matches = pattern.findall(page_text)
+           
             if matches:
+                print(f"{name}.txt 저장 중")
                 for match in matches:
-                    print(match)
+                    # print(match)
                     file.write(match)
             else:
                 print("No match found.")
+                file.write("No match found.")
 
     driver.quit()
 
