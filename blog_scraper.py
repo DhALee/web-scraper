@@ -14,7 +14,7 @@ def chrome_driver():
     chrome_options.add_argument('--headless')  # GUI 없이 실행 (헤드리스 모드)
     chrome_options.add_argument('--disable-gpu')  # GPU 비활성화 (일부 환경에서 필요)
     chrome_options.add_argument('--disable-software-rasterizer')  # 소프트웨어 래스터라이저 비활성화
-    service = Service('/usr/bin/chromedriver')
+    service = Service("C:\chromedriver\chromedriver.exe")
     driver = webdriver.Chrome(service=service, options=chrome_options)
 
     return driver
@@ -76,7 +76,7 @@ def scrape_blog_content(blog_link):
 
 # 전체 프로세스 실행
 if __name__ == '__main__':
-    search_query = '네이버 블로그 검색어'  # 원하는 검색어를 넣으세요
+    search_query = '롯데카드'  # 원하는 검색어를 넣으세요
     blog_posts = get_blog_search_results(search_query)
 
     for post in blog_posts:
