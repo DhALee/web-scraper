@@ -62,6 +62,54 @@ def reputation(text):
 
     return result
 
+def reputation_pipeline(html):
+    reputation_analysis = Ollama(model="llama3.1:405b")
+    # reputation_analysis = Ollama(model="llama3.1:70b")
+    # string_prompt = (
+    #     PromptTemplate.from_template(("""
+    #                                     I will provide you with the HTML of news pages below. You will separate the title and body of the article from the html file.
+    #                                     Extract only news title and contents except other stuffs like advertisement, html tags, and etc. 
+    #                                     Then based on the extracted news title and content, you will analyze the content for classifying its reputation and summarize the article. 
+    #                                     Finally, classify whether LOTTE Card's reputation is positive, negative, or neutral and explain your rationale.
+                                        
+    #                                     HTML file: {text}                                        
+
+    #                                     The format of output should be like below. You have to speak in Korean. 한글로 답변하시오.
+    #                                     -------------------------------------------------------
+    #                                     제목: \n
+    #                                     요약: \n 
+
+    #                                     분류: (positive or negative or neutral) \n
+    #                                     근거: 
+    #                                 """))
+    # )
+
+    string_prompt = (
+        PromptTemplate.from_template(("""
+                                        웹페이지 뉴스 기사의 HTML 파일을 입력으로 받아서 뉴스의 제목과 내용을 추출하고 요약해줘.
+                                        추출된 내용을 기반으로 롯데카드의 평판을 긍정, 부정, 중립으로 분류하고 그 근거를 알려줘.
+
+                                        HTML file: {text}                                        
+
+                                        답변은 아래와 같은 형식으로 출력해줘. 한글로 답변하시오.
+                                        -------------------------------------------------------
+                                        제목: \n
+                                        요약: \n 
+
+                                        분류: (positive or negative or neutral) \n
+                                        근거: 
+                                    """))
+    )
+
+    string_prompt_value = string_prompt.format_prompt(text=html)
+    result = reputation_analysis.invoke(string_prompt_value)
+
+    print("Result", "-"*100)
+    print(result)
+    print("-"*100)
+
+    return result
+
 def extract_naver_news(url):
     time_stamp = int(time.time())
     current_path = os.path.abspath(os.path.dirname(__file__))
@@ -72,7 +120,7 @@ def extract_naver_news(url):
     }
     response = requests.get(url, headers=headers)
     response.raise_for_status()
-    
+
     soup = BeautifulSoup(response.content, 'html.parser')
     news = soup.prettify()
 
@@ -108,6 +156,7 @@ def extract_naver_news(url):
     # print("-"*100)
 
     # url_to_pdf(url, pdf_path)
+    reputation_pipeline(news)
 
     return news, title, content
 
@@ -143,7 +192,7 @@ def monitor_naver_news(keyword):
     for url in article_urls:
         print(url)
         news, title, content = extract_naver_news(url)
-        # rep = reputation(news)
+        # rep = reputation_pipeline(news)
 
         # print(title)
         # print(content)
@@ -157,13 +206,13 @@ def monitor_naver_news(keyword):
 
 def main():
     keyword = input("모니터링할 키워드를 입력하세요: ")
-    # monitor_naver_news(keyword)
-    # 주기적으로 모니터링 작업 수행 (예: 60분마다)
-    schedule.every(60).minutes.do(monitor_naver_news, keyword=keyword)
+    monitor_naver_news(keyword)
+    # 주기적으로 모니터링 작업 수행 (예: 30분마다)
+    # schedule.every(30).minutes.do(monitor_naver_news, keyword=keyword)
     
-    while True:
-        schedule.run_pending()
-        time.sleep(10)
+    # while True:
+    #     schedule.run_pending()
+    #     time.sleep(10)
 
 if __name__ == "__main__":
     main()
